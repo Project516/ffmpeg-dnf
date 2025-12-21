@@ -17,7 +17,7 @@ jobs:
 
       # 1. Setup GitHub Action Cache
       - name: Cache ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ccache_host
           # The key changes every week (date), but 'restore-keys' falls back to the most recent one
