@@ -24,7 +24,7 @@ jobs:
              opus-devel openssl-devel libass-devel freetype-devel zlib-devel bzip2-devel nasm yasm
 
       - name: Checkout Repo (for the spec file)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Clone FFmpeg Master & Tarball
         run: |
