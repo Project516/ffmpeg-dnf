@@ -1,59 +1,58 @@
-name: Build FFmpeg RPM
+name: Repackage FFmpeg Binary
 
 on:
   schedule:
-    - cron: '0 2 * * 0' # Runs at 02:00 UTC every Sunday
-  workflow_dispatch:    # Allows you to click "Run" manually
+    - cron: '0 2 * * 0' # Weekly
+  workflow_dispatch:
 
-# CRITICAL: This gives the action permission to push the gh-pages branch
 permissions:
   contents: write
 
 jobs:
-  build-and-repo:
+  repackage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      # 1. Setup GitHub Action Cache
-      - name: Cache ccache
-        uses: actions/cache@v5
-        with:
-          path: .ccache_host
-          # The key changes every week (date), but 'restore-keys' falls back to the most recent one
-          key: ccache-${{ github.sha }}
-          restore-keys: |
-            ccache-
+      - name: Install RPM Build Tools
+        run: sudo apt-get update && sudo apt-get install -y rpm
 
-      - name: Build and Run Docker
+      - name: Download BtbN Build
         run: |
-          mkdir -p artifacts
-          mkdir -p .ccache_host # Ensure host dir exists
-          
-          docker build -t ffmpeg-builder .
-          
-          # Mount the host cache folder into the container
-          docker run --rm \
-            -v $PWD:/workspace \
-            -v $PWD/artifacts:/output \
-            -v $PWD/.ccache_host:/ccache_mount \
-            ffmpeg-builder
+          # Download the specific GPL Linux64 build
+          wget -O ffmpeg-master-latest-linux64-gpl.tar.xz \
+            https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
 
-      - name: Create DNF Repo
+      - name: Build RPM
+        run: |
+          # 1. Setup Directories
+          mkdir -p rpmbuild/{SOURCES,SPECS,RPMS,SRPMS,BUILD,BUILDROOT}
+          
+          # 2. Move Sources
+          cp ffmpeg-master-latest-linux64-gpl.tar.xz rpmbuild/SOURCES/
+          cp ffmpeg-bin.spec rpmbuild/SPECS/
+          
+          # 3. Define Date for Versioning
+          DATE=$(date +%Y%m%d)
+          
+          # 4. Build
+          rpmbuild --define "_topdir $(pwd)/rpmbuild" \
+                   --define "_date $DATE" \
+                   -bb rpmbuild/SPECS/ffmpeg-bin.spec
+
+      - name: Create Repo Structure
         run: |
           mkdir deploy-repo
-          mv artifacts/*.rpm deploy-repo/
+          cp rpmbuild/RPMS/x86_64/*.rpm deploy-repo/
           
-          # OPTIMIZATION: Reuse your builder image.
-          # It already has 'createrepo_c' installed, so this is instant.
-          docker run --rm \
-            -v $PWD/deploy-repo:/repo \
-            ffmpeg-builder \
-            createrepo_c /repo
+          # We use a container just for createrepo_c to keep the host clean
+          # or we can install 'createrepo-c' on ubuntu if available (it usually is)
+          sudo apt-get install -y createrepo-c
+          createrepo_c deploy-repo
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./deploy-repo
-          force_orphan: true # Wipes history every time (saves space)
+          force_orphan: true
