@@ -1,3 +1,6 @@
+# Force XZ Level 9 compression to stay under GitHub's 100MB limit
+%global _binary_payload w9.xzdio
+
 %global date %{?_date}
 %global changelog_date %{?_changelog_date}
 

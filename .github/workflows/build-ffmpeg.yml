@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: '0 2 * * 0' # Weekly
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -15,7 +18,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install RPM Build Tools
-        run: sudo apt-get update && sudo apt-get install -y rpm createrepo-c
+        run: sudo apt-get update && sudo apt-get install -y rpm createrepo-c xz-utils
 
       - name: Download BtbN Build
         run: |
