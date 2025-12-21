@@ -28,6 +28,11 @@ Weekly git master build of FFmpeg with full codec support.
 %setup -q -n ffmpeg-%{commit0}
 
 %build
+# 1. Force -fPIC into standard flags
+export CFLAGS="%{optflags} -fPIC"
+export CXXFLAGS="%{optflags} -fPIC"
+export LDFLAGS="%{?__global_ldflags}"
+
 ./configure \
     --prefix=%{_prefix} \
     --bindir=%{_bindir} \
@@ -35,6 +40,7 @@ Weekly git master build of FFmpeg with full codec support.
     --libdir=%{_libdir} \
     --mandir=%{_mandir} \
     --shlibdir=%{_libdir} \
+    --extra-cflags="-fPIC" \
     --enable-gpl \
     --enable-version3 \
     --enable-nonfree \
