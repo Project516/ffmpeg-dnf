@@ -59,7 +59,7 @@ export LDFLAGS="%{?__global_ldflags}"
     --enable-libass \
     --enable-openssl
 
-make %{?_smp_mflags}
+make -j$(nproc)
 
 %install
 make install DESTDIR=%{buildroot}

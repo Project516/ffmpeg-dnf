@@ -15,16 +15,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build and Run Builder
+      # 1. Setup GitHub Action Cache
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: .ccache_host
+          # The key changes every week (date), but 'restore-keys' falls back to the most recent one
+          key: ccache-${{ github.sha }}
+          restore-keys: |
+            ccache-
+
+      - name: Build and Run Docker
         run: |
-          mkdir artifacts
-          # Build the image
+          mkdir -p artifacts
+          mkdir -p .ccache_host # Ensure host dir exists
+          
           docker build -t ffmpeg-builder .
           
-          # Run the build
+          # Mount the host cache folder into the container
           docker run --rm \
             -v $PWD:/workspace \
             -v $PWD/artifacts:/output \
+            -v $PWD/.ccache_host:/ccache_mount \
             ffmpeg-builder
 
       - name: Create DNF Repo

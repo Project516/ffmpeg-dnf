@@ -1,5 +1,18 @@
 #!/bin/bash
 set -e
+
+# 1. Configure CCache to use the mounted volume
+export CCACHE_DIR="/ccache_mount"
+export CCACHE_MAXSIZE="500M" # Limit cache size
+mkdir -p $CCACHE_DIR
+
+# 2. Add ccache to the PATH so it intercepts gcc/g++ calls
+# On Fedora, ccache links are in /usr/lib64/ccache
+export PATH="/usr/lib64/ccache:$PATH"
+
+echo ">>> CCache Status (Before):"
+ccache -s
+
 OUTPUT_DIR="/output"
 
 # Setup directories
@@ -30,3 +43,6 @@ rpmbuild -bb ~/rpmbuild/SPECS/ffmpeg-git.spec \
 # Output
 cp ~/rpmbuild/RPMS/x86_64/*.rpm $OUTPUT_DIR/
 echo ">>> Success!"
+
+echo ">>> CCache Status (After):"
+ccache -s

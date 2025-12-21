@@ -12,7 +12,7 @@ RUN dnf clean all && dnf makecache
 # 3. Install Build Tools
 RUN dnf -y install \
     git rpm-build rpmdevtools make gcc gcc-c++ tar createrepo_c wget xz nasm yasm \
-    openssl-devel zlib-devel bzip2-devel freetype-devel libass-devel
+    openssl-devel zlib-devel bzip2-devel freetype-devel libass-devel ccache
 
 # 4. Install Codecs (Using Canonical Names)
 # Note: x264-devel (not libx264) and fdk-aac-devel (not libfdk-aac)
