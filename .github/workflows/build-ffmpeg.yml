@@ -1,4 +1,4 @@
-name: Repackage FFmpeg Binary
+name: FFmpeg DNF
 
 on:
   schedule:
