@@ -1,0 +1,75 @@
+name: Build FFmpeg RPM
+
+on:
+  schedule:
+    # Runs at 02:00 UTC every Sunday
+    - cron: '0 2 * * 0'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  build-and-repo:
+    runs-on: ubuntu-latest
+    container: fedora:latest # Build inside Fedora
+    permissions:
+      contents: write
+
+    steps:
+      - name: Install Build Tools
+        run: |
+          dnf -y update
+          dnf -y install git rpm-build rpmdevtools make gcc gcc-c++ tar \
+             createrepo_c wget xz
+          # Install dependencies listed in your spec file
+          dnf -y install libx264-devel x265-devel libvpx-devel lame-devel \
+             opus-devel openssl-devel libass-devel freetype-devel zlib-devel bzip2-devel nasm yasm
+
+      - name: Checkout Repo (for the spec file)
+        uses: actions/checkout@v4
+
+      - name: Clone FFmpeg Master & Tarball
+        run: |
+          # 1. Clone Master
+          git clone --depth 1 https://github.com/FFmpeg/FFmpeg.git ffmpeg-source
+          cd ffmpeg-source
+          
+          # 2. Get Vars
+          COMMIT=$(git rev-parse HEAD)
+          DATE=$(date +%Y%m%d)
+          echo "COMMIT=$COMMIT" >> $GITHUB_ENV
+          echo "DATE=$DATE" >> $GITHUB_ENV
+          
+          # 3. Create Tarball matching the directory structure expected by %setup
+          cd ..
+          mv ffmpeg-source ffmpeg-$COMMIT
+          tar --exclude-vcs -czf ffmpeg-$COMMIT.tar.gz ffmpeg-$COMMIT
+
+      - name: Setup RPM Build Tree
+        run: |
+          rpmdev-setuptree
+          # Move sources and spec to the rpmbuild tree
+          mv ffmpeg-*.tar.gz ~/rpmbuild/SOURCES/
+          cp ffmpeg-git.spec ~/rpmbuild/SPECS/
+
+      - name: Build RPM
+        run: |
+          rpmbuild -bb ~/rpmbuild/SPECS/ffmpeg-git.spec \
+            --define "_commit0 ${{ env.COMMIT }}" \
+            --define "_date ${{ env.DATE }}"
+
+      - name: Create DNF Repository
+        run: |
+          mkdir -p deploy-repo
+          # Move the compiled RPMs (ignore debuginfo if you want to save space)
+          mv ~/rpmbuild/RPMS/x86_64/*.rpm deploy-repo/
+          
+          # Generate repodata
+          createrepo_c deploy-repo
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy-repo
+          force_orphan: true # This deletes old history (cleaning up old RPMs)
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'

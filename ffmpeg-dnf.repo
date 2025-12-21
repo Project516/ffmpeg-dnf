@@ -1,0 +1,7 @@
+[ffmpeg-dnf]
+name=ffmpeg-dnf
+baseurl=https://project516.dev/ffmpeg-dnf/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=1
+metadata_expire=1h
