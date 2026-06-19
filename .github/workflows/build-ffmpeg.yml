@@ -15,7 +15,7 @@ jobs:
   repackage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install RPM Build Tools
         run: sudo apt-get update && sudo apt-get install -y rpm createrepo-c xz-utils
