@@ -19,12 +19,11 @@ Custom Fedora repository that auto-builds RPMs from the latest FFmpeg `master` o
 	sudo dnf install ffmpeg
 	```
 
-## Updating
+## Verify installation
 
-- Weekly builds track upstream `master`. Pull updates as usual:
-  ```bash
-  sudo dnf upgrade --refresh
-  ```
+```bash
+ffmpeg -version | head -n 1
+```
 
 ## Removing the repo
 
