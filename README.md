@@ -1,6 +1,6 @@
 # ffmpeg-dnf
 
-Custom Fedora repository that auto-builds RPMs from the latest FFmpeg `master` on a weekly schedule.
+Custom Fedora repository that auto-builds RPMs from the latest FFmpeg `master` on a daily schedule.
 
 ## Install the repository
 
@@ -21,7 +21,7 @@ Custom Fedora repository that auto-builds RPMs from the latest FFmpeg `master` o
 
 ## Updating
 
-- Weekly builds track upstream `master`. Pull updates as usual:
+- Daily builds track upstream `master`. Pull updates as usual:
   ```bash
   sudo dnf upgrade --refresh
   ```
